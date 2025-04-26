@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Attendance Dashboard</title>
+
+  <!-- Plus Jakarta Sans font -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #121212;
+      --bg-card: #1e1e1e;
+      --bg-card-hover: #2a2a2a;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #7c7c7c;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-red: #ef4444;
+      --border-color: #2e2e2e;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow: 0 4px 6px rgba(0,0,0,0.2);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0 0 80px 0;
+      min-height: 100vh;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--accent-blue);
+    }
+
+    .logo-text span {
+      color: var(--text-secondary);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      transition: 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: var(--bg-card-hover);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 2.75rem;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .attendance-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 1.75rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .heading-text {
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .live-dot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      animation: ping 1.5s infinite;
+    }
+
+    @keyframes ping {
+      75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .refresh-info {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(16, 185, 129, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--accent-green);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .table-container {
+      overflow-x: auto;
+      padding: 0.75rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      padding: 1rem 1.75rem;
+      text-align: left;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    td {
+      padding: 1.25rem 1.75rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background-color: var(--accent-green);
+      transition: width 0.3s ease;
+    }
+
+    tbody tr:hover::before {
+      width: 3px;
+    }
+
+    .name-cell {
+      font-weight: 600;
+    }
+
+    .roll-cell {
+      font-family: monospace;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .time-cell {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .date-cell {
+      color: var(--text-secondary);
+    }
+
+    .empty-state {
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-subtitle {
+      color: var(--text-tertiary);
+      font-size: 0.9rem;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    footer {
+      background-color: #1a1a1a;
+      color: var(--text-tertiary);
+      padding: 1rem;
+      text-align: center;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    footer a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover {
+      color: #60a5fa;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    tr.new-entry {
+      animation: slideIn 0.5s forwards, glow 1.5s ease-in-out;
+    }
+
+    @keyframes glow {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(16, 185, 129, 0.1); }
+    }
+
+    .count-changed {
+      animation: countChange 0.8s ease;
+    }
+
+    @keyframes countChange {
+      0% { transform: scale(1.1); color: var(--accent-blue); }
+      100% { transform: scale(1); color: var(--accent-green); }
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .attendance-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-text">Smart<span>Attendance</span></div>
+      </div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Students Present Today</div>
+        <div class="stat-value" id="present-count">{{ count }}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="attendance-heading">
+        <div class="heading-text">
+          <span class="live-dot"></span>
+          Today's Attendance
+        </div>
+        <div class="refresh-info">
+          <span class="refresh-spinner"></span>
+          Updates every 2 seconds
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Time</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-body">
+            {% for student in students %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td class="name-cell">{{ student.Name }}</td>
+              <td class="roll-cell">{{ student.Roll }}</td>
+              <td class="time-cell">{{ student.Time }}</td>
+              <td class="date-cell">{{ student.Date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="empty-attendance" class="empty-state" style="display: none;">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No attendance records</div>
+        <div class="empty-subtitle">Students will appear here when they check in</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="window.location.href='/log'">View Logs</button>
+    </div>
+  </div>
+
+  <footer>
+    Smart Attendance System &copy; 2025. Built with ❤️
+  </footer>
+</body>
+</html>
